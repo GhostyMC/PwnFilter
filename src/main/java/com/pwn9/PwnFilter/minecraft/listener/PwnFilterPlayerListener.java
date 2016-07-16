@@ -24,6 +24,8 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.serializer.TextSerializers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -58,9 +60,6 @@ public class PwnFilterPlayerListener extends BaseListener implements EventListen
 
         if (event.isCancelled()) return;
 
-//        if(1 == 1)
-  //          return;
-
         Optional<Player> playerOptional = event.getCause().first(Player.class);
         if(!playerOptional.isPresent()) {
             return;
@@ -93,7 +92,23 @@ public class PwnFilterPlayerListener extends BaseListener implements EventListen
         }
 
 
-        FilterTask state = new FilterTask(new ColoredString(message), bukkitPlayer, this);
+        String part1 = message;
+        String part2 = null;
+        String player = bukkitPlayer.getName();
+
+        if (message.contains(player)) {
+            String[] parts = message.split(player, 2);
+            part1 = parts[0];
+            part2 = parts[1];
+        }
+
+        ArrayList<String> parts = new ArrayList<>(Arrays.asList(part1, part2));
+
+        Boolean messageChanged = false;
+
+        for (int indexNumber = 0; indexNumber < 2; indexNumber ++) {
+
+        FilterTask state = new FilterTask(new ColoredString(parts.get(indexNumber)), bukkitPlayer, this);
 
         // Global decolor
         if ((SpongeConfig.decolor()) && !(bukkitPlayer.hasPermission("pwnfilter.color"))) {
@@ -108,9 +123,21 @@ public class PwnFilterPlayerListener extends BaseListener implements EventListen
 
         // Only update the message if it has been changed.
         if (state.messageChanged()){
-            event.setMessage(TextSerializers.FORMATTING_CODE.deserialize((state.getModifiedMessage()).getColoredString()));
+            messageChanged = true;
+
+            parts.set(indexNumber, state.getModifiedMessage().getColoredString());
         }
-        if (state.isCancelled()) event.setCancelled(true);
+
+        if (state.isCancelled()) {
+            event.setCancelled(true);
+        }
+
+        }
+
+        if (messageChanged) {
+            event.setMessage(TextSerializers.FORMATTING_CODE.deserialize(parts.get(0) + bukkitPlayer.getName() + parts.get(1)));
+        }
+
     }
 
     /**
