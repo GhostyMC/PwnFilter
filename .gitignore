@@ -13,3 +13,8 @@ PwnFilter.ipr
 PwnFilter.iws
 .gradle
 build
+run
+idea
+.idea
+\.idea
+/.idea
